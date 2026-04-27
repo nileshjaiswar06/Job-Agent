@@ -31,8 +31,21 @@ function toJob(core: JobCore): Job | null {
   return final.success ? final.data : null;
 }
 
+function preferRicherJob(existing: Job, incoming: Job): Job {
+  const exDesc = existing.description_snippet?.length ?? 0;
+  const inDesc = incoming.description_snippet?.length ?? 0;
+  const exApply = Boolean(existing.apply_link?.trim());
+  const inApply = Boolean(incoming.apply_link?.trim());
+
+  if (!exDesc && inDesc) return incoming;
+  if (!exApply && inApply) return incoming;
+  if (inDesc > exDesc) return incoming;
+  return existing;
+}
+
 /**
- * Fetches all configured sources, normalizes, assigns `job_id`, dedupes by `job_id` (first wins).
+ * Fetches all configured sources, normalizes, assigns `job_id`, dedupes by `job_id`
+ * (keeps richer row: description snippet or apply link when the other copy is missing).
  */
 export async function aggregateJobs(env: {
   YC_JOBS_URL: string;
@@ -55,11 +68,15 @@ export async function aggregateJobs(env: {
   for (const core of merged) {
     const job = toJob(core);
     if (!job) continue;
-    if (!byId.has(job.job_id)) {
+    const prev = byId.get(job.job_id);
+    if (!prev) {
       byId.set(job.job_id, job);
+    } else {
+      byId.set(job.job_id, preferRicherJob(prev, job));
     }
   }
 
   return Array.from(byId.values());
 }
+
 

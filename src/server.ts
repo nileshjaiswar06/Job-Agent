@@ -17,8 +17,13 @@ const app = Fastify({ logger: true });
 app.get("/health", async () => ({ ok: true as const }));
 
 app.get("/ingest", async (_req, reply) => {
-  const jobs = await aggregateJobs(env);
-  return reply.send(jobs);
+  try {
+    const jobs = await aggregateJobs(env);
+    return reply.send(jobs);
+  } catch (err) {
+    app.log.error(err);
+    return reply.status(500).send({ error: "ingest_failed" });
+  }
 });
 
 app

@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+﻿import { http } from "../lib/http";
 import type { JobCore } from "../lib/schema";
 
 type LeverPosting = {
@@ -17,7 +17,7 @@ function snippet(text: string | undefined, max = 400): string | undefined {
   if (!text) return undefined;
   const t = text.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
-  return `${t.slice(0, max)}…`;
+  return `${t.slice(0, max)}\u2026`;
 }
 
 function locationFromPosting(p: LeverPosting): string | undefined {
@@ -37,7 +37,7 @@ export async function fetchLeverJobs(siteSlugs: string[]): Promise<JobCore[]> {
 
     const url = `https://api.lever.co/v0/postings/${encodeURIComponent(s)}?mode=json`;
     try {
-      const res = await axios.get<LeverResponse>(url, { timeout: 25_000 });
+      const res = await http.get<LeverResponse>(url, { timeout: 25_000 });
       const postings = res.data.data ?? [];
 
       for (const p of postings) {

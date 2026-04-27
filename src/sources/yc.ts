@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+﻿import { http } from "../lib/http";
 import type { JobCore } from "../lib/schema";
 
 type YcApiJob = {
@@ -18,13 +18,13 @@ function snippet(text: string | undefined, max = 400): string | undefined {
   if (!text) return undefined;
   const t = text.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
-  return `${t.slice(0, max)}…`;
+  return `${t.slice(0, max)}\u2026`;
 }
 
 export async function fetchYcJobs(jobsUrl: string): Promise<JobCore[]> {
   let res;
   try {
-    res = await axios.get<YcApiResponse>(jobsUrl, {
+    res = await http.get<YcApiResponse>(jobsUrl, {
       timeout: 30_000,
       validateStatus: () => true,
     });

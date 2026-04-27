@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+﻿import { http } from "../lib/http";
 import type { JobCore } from "../lib/schema";
 
 type GhJob = {
@@ -26,7 +26,7 @@ function snippet(html: string | undefined, max = 400): string | undefined {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   if (!text) return undefined;
   if (text.length <= max) return text;
-  return `${text.slice(0, max)}…`;
+  return `${text.slice(0, max)}\u2026`;
 }
 
 export async function fetchGreenhouseJobs(boardTokens: string[]): Promise<JobCore[]> {
@@ -38,7 +38,7 @@ export async function fetchGreenhouseJobs(boardTokens: string[]): Promise<JobCor
 
     const url = `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(t)}/jobs`;
     try {
-      const res = await axios.get<GhBoardResponse>(url, { timeout: 25_000 });
+      const res = await http.get<GhBoardResponse>(url, { timeout: 25_000 });
       const jobs = res.data.jobs ?? [];
 
       for (const job of jobs) {
@@ -56,7 +56,7 @@ export async function fetchGreenhouseJobs(boardTokens: string[]): Promise<JobCor
         });
       }
     } catch {
-      // Skip failing boards; other boards still contribute
+      // Skip failing boards
     }
   }
 

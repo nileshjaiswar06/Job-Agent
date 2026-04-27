@@ -20,3 +20,4 @@ export const jobSchema = jobCoreSchema.extend({
 
 export type Job = z.infer<typeof jobSchema>;
 
+
