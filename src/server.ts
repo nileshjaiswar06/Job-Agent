@@ -8,11 +8,17 @@ const env = {
   YC_JOBS_URL:
     process.env.YC_JOBS_URL ??
     "https://www.workatastartup.com/api/v1/jobs",
-  GREENHOUSE_BOARDS: process.env.GREENHOUSE_BOARDS ?? "",
-  LEVER_SITES: process.env.LEVER_SITES ?? "",
+  GREENHOUSE_BOARDS:
+    process.env.GREENHOUSE_BOARDS?.trim() || "stripe,airbnb",
+  LEVER_SITES: process.env.LEVER_SITES?.trim() ?? "",
 };
 
 const app = Fastify({ logger: true });
+if (!process.env.GREENHOUSE_BOARDS?.trim()) {
+  app.log.warn(
+    "GREENHOUSE_BOARDS not set — using default stripe,airbnb (copy .env.example to .env to customize)",
+  );
+}
 
 app.get("/health", async () => ({ ok: true as const }));
 

@@ -1,4 +1,4 @@
-﻿import { http } from "../lib/http";
+import { http } from "../lib/http";
 import type { JobCore } from "../lib/schema";
 
 type YcApiJob = {
@@ -33,6 +33,9 @@ export async function fetchYcJobs(jobsUrl: string): Promise<JobCore[]> {
   }
 
   if (res.status < 200 || res.status >= 300 || !res.data?.jobs) {
+    console.warn(
+      `[yc] ${jobsUrl} -> HTTP ${res.status}; no jobs array (YC often 404; use Greenhouse/Lever until URL is updated)`,
+    );
     return [];
   }
 
@@ -57,4 +60,3 @@ export async function fetchYcJobs(jobsUrl: string): Promise<JobCore[]> {
   }
   return out;
 }
-
