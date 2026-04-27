@@ -1,5 +1,6 @@
 ﻿import { computeJobId } from "../lib/jobId";
 import { jobCoreSchema, jobSchema, type Job, type JobCore } from "../lib/schema";
+import { withTimeout } from "../lib/withTimeout";
 import { fetchGreenhouseJobs } from "../sources/greenhouse";
 import { fetchLeverJobs } from "../sources/lever";
 import { fetchOpenClawJobs } from "../sources/openclaw";
@@ -47,6 +48,8 @@ function preferRicherJob(existing: Job, incoming: Job): Job {
  * Fetches all configured sources, normalizes, assigns `job_id`, dedupes by `job_id`
  * (keeps richer row: description snippet or apply link when the other copy is missing).
  */
+const SOURCE_FETCH_MS = 40_000;
+
 export async function aggregateJobs(env: {
   YC_JOBS_URL: string;
   GREENHOUSE_BOARDS: string;
@@ -56,11 +59,15 @@ export async function aggregateJobs(env: {
   const leverSites = parseList(env.LEVER_SITES);
 
   const [yc, gh, lever, openclaw] = await Promise.all([
-    fetchYcJobs(env.YC_JOBS_URL),
-    fetchGreenhouseJobs(boards),
-    fetchLeverJobs(leverSites),
-    fetchOpenClawJobs(),
+    withTimeout(fetchYcJobs(env.YC_JOBS_URL), SOURCE_FETCH_MS, "yc"),
+    withTimeout(fetchGreenhouseJobs(boards), SOURCE_FETCH_MS, "greenhouse"),
+    withTimeout(fetchLeverJobs(leverSites), SOURCE_FETCH_MS, "lever"),
+    withTimeout(fetchOpenClawJobs(), SOURCE_FETCH_MS, "openclaw"),
   ]);
+
+  console.info(
+    `[ingest] source rows: yc=${yc.length} greenhouse=${gh.length} lever=${lever.length} openclaw=${openclaw.length}`,
+  );
 
   const merged: JobCore[] = [...yc, ...gh, ...lever, ...openclaw];
   const byId = new Map<string, Job>();
@@ -76,7 +83,10 @@ export async function aggregateJobs(env: {
     }
   }
 
-  return Array.from(byId.values());
+  const deduped = Array.from(byId.values());
+  console.info(`[ingest] deduped jobs: ${deduped.length}`);
+
+  return deduped;
 }
 
 

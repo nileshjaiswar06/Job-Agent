@@ -33,7 +33,7 @@ export async function fetchGreenhouseJobs(boardTokens: string[]): Promise<JobCor
   const results: JobCore[] = [];
 
   for (const token of boardTokens) {
-    const t = token.trim();
+    const t = token.trim().toLowerCase();
     if (!t) continue;
 
     const url = `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(t)}/jobs`;

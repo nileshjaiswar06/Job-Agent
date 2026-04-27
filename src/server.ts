@@ -1,4 +1,4 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 import Fastify from "fastify";
 import { aggregateJobs } from "./services/aggregator";
 
@@ -26,6 +26,21 @@ app.get("/ingest", async (_req, reply) => {
   }
 });
 
+app.get("/v1/ingest", async (_req, reply) => {
+  try {
+    const data = await aggregateJobs(env);
+    return reply.send({
+      version: "1",
+      generatedAt: new Date().toISOString(),
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    app.log.error(err);
+    return reply.status(500).send({ error: "ingest_failed", version: "1" });
+  }
+});
+
 app
   .listen({ port: PORT, host: "0.0.0.0" })
   .then((address) => {
@@ -35,4 +50,3 @@ app
     app.log.error(err);
     process.exit(1);
   });
-

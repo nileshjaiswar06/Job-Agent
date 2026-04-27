@@ -32,7 +32,7 @@ export async function fetchLeverJobs(siteSlugs: string[]): Promise<JobCore[]> {
   const results: JobCore[] = [];
 
   for (const slug of siteSlugs) {
-    const s = slug.trim();
+    const s = slug.trim().toLowerCase();
     if (!s) continue;
 
     const url = `https://api.lever.co/v0/postings/${encodeURIComponent(s)}?mode=json`;
